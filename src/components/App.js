@@ -53,8 +53,6 @@ class App extends Component {
     }
   }
 
-  async getContractAndBalance() {}
-
   async fetchBlockchainAccount() {
     const accounts = await this.web3.eth.getAccounts();
     console.info("account from metamask", accounts);
