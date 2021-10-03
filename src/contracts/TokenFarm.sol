@@ -41,7 +41,7 @@ contract TokenFarm{
     //unstake tokens
     function unstakeTokens() public{
         uint balance = stakingBalance[msg.sender];
-        require(balance > 0,"Staking balance cannot be 0");
+        require(balance >= 0,"Staking balance cannot be 0");
 
         daiToken.transfer(msg.sender, balance);
 
