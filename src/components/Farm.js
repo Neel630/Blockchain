@@ -10,6 +10,7 @@ const Farm = ({
   fromWei,
   toWei,
   error,
+  setError,
   farmLoading,
 }) => {
   const [inputText, setInputText] = useState(null);
@@ -17,6 +18,10 @@ const Farm = ({
   const stakeToken = (event) => {
     event.preventDefault();
     let amount = inputText.toString();
+    if (isNaN(amount)) {
+      setError("Token should be number");
+      return;
+    }
     amount = toWei(inputText, "Ether");
     stakeTokens(amount);
   };

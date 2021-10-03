@@ -105,25 +105,6 @@ class App extends Component {
       return;
     }
 
-    if (dappTokensData) {
-      const dappTokenContract = new this.web3.eth.Contract(
-        DappToken.abi,
-        dappTokensData.address
-      );
-
-      const dappTokenBalance = await dappTokenContract.methods
-        .balanceOf(this.state.account)
-        .call();
-
-      this.setState({
-        dappToken: dappTokenContract,
-        dappTokenBalance: dappTokenBalance.toString(),
-      });
-    } else {
-      window.alert("Please change network to Rinkiby in Metamask and refresh");
-      return;
-    }
-
     if (tokenFarmData) {
       const tokenFarmContract = new this.web3.eth.Contract(
         TokenFarm.abi,
@@ -148,6 +129,13 @@ class App extends Component {
     });
   }
 
+  speak = (msg, ind = 8) => {
+    const sp = new SpeechSynthesisUtterance(msg);
+    sp.voice = speechSynthesis.getVoices()[ind];
+    sp.rate = 0.85;
+    speechSynthesis.speak(sp);
+  };
+
   stakeTokens = (amount) => {
     let self = this;
     this.setState({ farmLoading: true, error: null });
@@ -164,6 +152,7 @@ class App extends Component {
           .on("receipt", function(receipt) {
             // receipt example
             console.info("receipt...", receipt);
+            self.speak(`Token stake successfully`);
             window.location.reload();
             self.setState({
               farmLoading: false,
@@ -171,6 +160,7 @@ class App extends Component {
           })
           .on("error", (error) => {
             console.error(error);
+            self.speak(`Error invoking contract while staking token`);
             let errorMessage = "Error staking token, please try again ...";
             if (
               error.message &&
@@ -194,6 +184,7 @@ class App extends Component {
       })
       .on("error", (error) => {
         console.error(error);
+        self.speak(`Error invoking contract while staking token`);
         let errorMessage = "Error staking token, please try again ...";
         if (
           error.message &&
@@ -209,7 +200,7 @@ class App extends Component {
       });
   };
 
-  unstakeTokens = (amount) => {
+  unstakeTokens = () => {
     this.setState({ farmLoading: true, error: null });
     let self = this;
     this.state.tokenFarm.methods
@@ -224,11 +215,13 @@ class App extends Component {
         self.setState({
           farmLoading: false,
         });
+        self.speak(`Token unstake successfully`);
+
         window.location.reload();
       })
-      .on("error", (error, receipt) => {
-        console.info("error receipt", receipt);
+      .on("error", (error) => {
         console.error(error);
+        self.speak(`Error invoking contract while unstaking token`);
         self.setState({
           farmLoading: false,
           error: "Error untaking token, please try again ...",
@@ -266,6 +259,7 @@ class App extends Component {
                     stakeTokens={this.stakeTokens}
                     unstakeTokens={this.unstakeTokens}
                     error={this.state.error}
+                    setError={(error) => this.setState({ error: error })}
                     farmLoading={this.state.farmLoading}
                   />
                 </div>
