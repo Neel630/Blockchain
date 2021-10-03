@@ -2,7 +2,7 @@ import React from "react";
 export default () => {
   return (
     <div
-      class="spinner-border text-info"
+      className="spinner-border text-info"
       role="status"
       style={{
         position: "absolute",
@@ -10,7 +10,7 @@ export default () => {
         top: "50%",
       }}
     >
-      <span class="sr-only">Loading...</span>
+      <span className="sr-only">Loading...</span>
     </div>
   );
 };
