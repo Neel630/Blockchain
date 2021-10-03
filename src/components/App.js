@@ -17,10 +17,12 @@ class App extends Component {
       daiToken: {},
       dappToken: {},
       tokenFarmToken: {},
-      daiTokenBalance: 0,
-      dappTokenBalance: 0,
-      stakingBalance: 0,
+      daiTokenBalance: "0",
+      dappTokenBalance: "0",
+      stakingBalance: "0",
       loading: true,
+      farmLoading: false,
+      error: null,
     };
   }
 
@@ -134,7 +136,7 @@ class App extends Component {
 
       this.setState({
         tokenFarm: tokenFarmContract,
-        tokenFarmBalance: tokenFarmBalance.toString(),
+        stakingBalance: tokenFarmBalance.toString(),
       });
     } else {
       window.alert("Please change network to Rinkiby in Metamask and refresh");
@@ -146,7 +148,96 @@ class App extends Component {
     });
   }
 
+  stakeTokens = (amount) => {
+    let self = this;
+    this.setState({ farmLoading: true, error: null });
+    this.state.daiToken.methods
+      .approve(this.state.tokenFarm._address, amount)
+      .send({ from: this.state.account })
+      .on("transactionHash", (hash) => {
+        this.state.tokenFarm.methods
+          .stakeTokens(amount)
+          .send({ from: this.state.account })
+          .on("transactionHash", (hash) => {
+            console.info("Transaction Hash", hash);
+          })
+          .on("receipt", function(receipt) {
+            // receipt example
+            console.info("receipt...", receipt);
+            window.location.reload();
+            self.setState({
+              farmLoading: false,
+            });
+          })
+          .on("error", (error) => {
+            console.error(error);
+            let errorMessage = "Error staking token, please try again ...";
+            if (
+              error.message &&
+              error.message.includes("User denied transaction")
+            ) {
+              errorMessage =
+                "MetaMask Tx Signature: User denied transaction signature.";
+            } else if (
+              error.message &&
+              error.message.includes(
+                "TXRejectedError: the tx doesn't have the correct nonce."
+              )
+            ) {
+              errorMessage = "Clear previous transaction and try again";
+            }
+            self.setState({
+              farmLoading: false,
+              error: errorMessage,
+            });
+          });
+      })
+      .on("error", (error) => {
+        console.error(error);
+        let errorMessage = "Error staking token, please try again ...";
+        if (
+          error.message &&
+          error.message.includes("User denied transaction")
+        ) {
+          errorMessage =
+            "MetaMask Tx Signature: User denied transaction signature.";
+        }
+        self.setState({
+          farmLoading: false,
+          error: errorMessage,
+        });
+      });
+  };
+
+  unstakeTokens = (amount) => {
+    this.setState({ farmLoading: true, error: null });
+    let self = this;
+    this.state.tokenFarm.methods
+      .unstakeTokens()
+      .send({ from: this.state.account })
+      .on("transactionHash", (hash) => {
+        console.info("Transaction Hash", hash);
+      })
+      .on("receipt", function(receipt) {
+        // receipt example
+        console.info("receipt...", receipt);
+        self.setState({
+          farmLoading: false,
+        });
+        window.location.reload();
+      })
+      .on("error", (error, receipt) => {
+        console.info("error receipt", receipt);
+        console.error(error);
+        self.setState({
+          farmLoading: false,
+          error: "Error untaking token, please try again ...",
+        });
+      });
+  };
+
   render() {
+    const { daiTokenBalance, dappTokenBalance, stakingBalance } = this.state;
     return (
       <div>
         <Navbar account={this.state.account} />
@@ -166,7 +257,17 @@ class App extends Component {
                     target="_blank"
                     rel="noopener noreferrer"
                   ></a>
-                  <Farm />
+                  <Farm
+                    daiTokenBalance={daiTokenBalance}
+                    dappTokenBalance={dappTokenBalance}
+                    stakingBalance={stakingBalance}
+                    fromWei={this.web3.utils.fromWei}
+                    toWei={this.web3.utils.toWei}
+                    stakeTokens={this.stakeTokens}
+                    unstakeTokens={this.unstakeTokens}
+                    error={this.state.error}
+                    farmLoading={this.state.farmLoading}
+                  />
                 </div>
               </main>
             </div>
