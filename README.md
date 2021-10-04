@@ -24,3 +24,10 @@ To run frontend
  ```
  npm start
  ```
+
+To deploy contract on rinkiby
+- Uncomment code in truffle-config and add mnemonic, rinkibyInfuraURL(can be obtain by creating project on Infura) 
+- Run following command
+```
+truffle migrate --network rinkeby
+```
